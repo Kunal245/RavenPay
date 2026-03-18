@@ -2,7 +2,8 @@ const express = require("express");
 const zod = require("zod");
 const jwt = require("jsonwebtoken")
 const { User } = require("../db");
-const JWT_SECRET = require("../config")
+const JWT_SECRET = require("../config");
+const authMiddleware = require("../middleware/authMiddleware");
 const app = express();
 
 const signupBody = zod.object({
@@ -60,7 +61,7 @@ router.post("/signin", async function(req, res){
         })
     }
 
-    const user = await User.find({
+    const user = await User.findOne({
         userName: req.body.userName,
         password: req.body.password
     })
@@ -79,6 +80,55 @@ router.post("/signin", async function(req, res){
     res.status(411).json({
         msg: "User doesn't exist"
     })
+})
+
+const updateBody = zod.object({
+    password: zod.string().optional(),
+    firstName: zod.string().optional(),
+    lastName: zod.string().optional(),
+})
+
+router.put("/",authMiddleware , async function(req, res){
+    const parsedUpdate = zod.safeParse(updateBody);
+    if(!parsedUpdate.success) {
+        res.status(411).json({
+            msg: "Error while updating data"
+        })
+    }
+
+    await User.updateOne({
+        _id: req.userId
+    })
+
+    res.json({
+        msg: "Updated Successfully"
+    })
+})
+
+router.get("/bulk", async function(req, res){
+    const filter = req.query.filter || "",
+
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        },{
+            lastName: {
+                "$regex": filter
+            }
+        }]
+    })
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id ,
+        }))
+    })
+
 })
 
 module.exports = router;
