@@ -15,10 +15,10 @@ const signupBody = zod.object({
 
 const router = express.Router();
 router.post("/signup", async function (req, res){
-    const parsedSignup = zod.safeParse(req.body);
+    const parsedSignup = signupBody.safeParse(req.body);
     // const { success } = zod.safeParse(req.body); -object destructuring syntax
     if(!parsedSignup.success){
-        res.status(411).json({
+        return res.status(411).json({
             msg: "Invalid input type"
         })
     }
@@ -27,7 +27,7 @@ router.post("/signup", async function (req, res){
     })
 
     if(existingUser){
-        res.status(411).json({
+        return res.status(411).json({
             msg: "username already exist!!"
         })
     }
@@ -35,16 +35,16 @@ router.post("/signup", async function (req, res){
     const user = await User.create({
         userName: req.body.userName,
         password: req.body.password,
-        firstName: req.body.firstname,
+        firstName: req.body.firstName,
         lastName: req.body.lastName
     })
 
+    const userId = user._id;
     await Account.create({
         userId,
         balance: 1 + Math.random() * 10000
     })
 
-    const userId = user._id;
     const token = jwt.sign({userId}, JWT_SECRET);
 
     res.json({
@@ -58,9 +58,9 @@ const signinBody = zod.object({
 })
 
 router.post("/signin", async function(req, res){
-    const parsedSignin = zod.safeParse(signinBody);
+    const parsedSignin = signinBody.safeParse(req.body);
     if (!parsedSignin.success){
-        res.status(411).json({
+        return res.status(411).json({
             msg: "Invalid input type"
         })
     }
@@ -93,7 +93,7 @@ const updateBody = zod.object({
 })
 
 router.put("/",authMiddleware , async function(req, res){
-    const parsedUpdate = zod.safeParse(updateBody);
+    const parsedUpdate = updateBody.safeParse(updateBody);
     if(!parsedUpdate.success) {
         res.status(411).json({
             msg: "Error while updating data"
@@ -126,7 +126,7 @@ router.get("/bulk", async function(req, res){
 
     res.json({
         user: users.map(user => ({
-            username: user.username,
+            userName: user.userName,
             firstName: user.firstName,
             lastName: user.lastName,
             _id: user._id ,
