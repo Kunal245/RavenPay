@@ -49,7 +49,7 @@ export const SendMoney = () => {
                             amount
                         }, {
                             headers: {
-                                Authorization: "Bearer " + localStorage.getItem("token")
+                                Authorization: localStorage.getItem("token")
                             }
                         })
                         navigate("/dashboard")

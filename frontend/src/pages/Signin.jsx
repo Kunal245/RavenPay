@@ -31,7 +31,8 @@ export const Signin = () => {
                 userName,
                 password
             });
-            localStorage.setItem("token", response.data.token)
+            localStorage.removeItem("token")
+            localStorage.setItem("token", "Bearer " + response.data.token)
             navigate("/dashboard")
           }}
           label={"Sign in"} />
